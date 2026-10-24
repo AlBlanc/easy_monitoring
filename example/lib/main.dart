@@ -738,6 +738,18 @@ class _MonitoringDashboardPageState extends State<MonitoringDashboardPage> {
               label: 'Family / Architecture',
               value: gpu.family,
             ),
+            _MetricRow(
+              label: 'Memory Architecture',
+              value: gpu.totalVramBytes > 0
+                  ? (gpu.totalVramBytes >= 16 * 1024 * 1024 * 1024
+                      ? 'Unified / Shared System Memory'
+                      : 'Dedicated VRAM')
+                  : 'Shared Architecture',
+            ),
+            const _MetricRow(
+              label: 'Hardware Engine Sampling',
+              value: 'Active WDDM / DRM Engines (3D, Compute, Copy, Video)',
+            ),
           ],
         ),
       ),

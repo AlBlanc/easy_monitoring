@@ -4,6 +4,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
 use gfxinfo::active_gpu;
+#[cfg(target_os = "windows")]
+mod windows_gpu;
+#[cfg(any(target_os = "linux", target_os = "android"))]
+mod linux_gpu;
 use serde::{Deserialize, Serialize};
 use sysinfo::{
     CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind,
@@ -110,6 +114,10 @@ pub struct EasyMonitoringEngine {
     physical_cores: usize,
     current_pid: Pid,
     start_instant: std::time::Instant,
+    #[cfg(target_os = "windows")]
+    windows_gpu: Option<windows_gpu::WindowsGpuMonitor>,
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    linux_gpu: linux_gpu::LinuxGpuMonitor,
 }
 
 impl EasyMonitoringEngine {
@@ -143,11 +151,20 @@ impl EasyMonitoringEngine {
             .physical_core_count()
             .unwrap_or_else(|| system.cpus().len());
 
+        #[cfg(target_os = "windows")]
+        let windows_gpu = windows_gpu::WindowsGpuMonitor::new();
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        let linux_gpu = linux_gpu::LinuxGpuMonitor::new();
+
         Self {
             system,
             physical_cores,
             current_pid,
             start_instant: std::time::Instant::now(),
+            #[cfg(target_os = "windows")]
+            windows_gpu,
+            #[cfg(any(target_os = "linux", target_os = "android"))]
+            linux_gpu,
         }
     }
 
@@ -163,11 +180,56 @@ impl EasyMonitoringEngine {
 
         let cpu = self.collect_cpu_metrics();
         let memory = self.collect_memory_metrics();
-        let (gpu, proc_gpu_load, proc_gpu_vram) =
+        let (mut gpu, mut proc_gpu_load, proc_gpu_vram) =
             Self::collect_gpu_and_process_metrics(
                 memory.total_memory_bytes,
                 self.current_pid.as_u32(),
             );
+
+        #[cfg(target_os = "windows")]
+        if let Some(ref mut monitor) = self.windows_gpu {
+            let sample = monitor.poll(self.current_pid.as_u32());
+            if sample.total_usage_percent > 0.0 || gpu.usage_percent == 0.0 {
+                gpu.usage_percent = sample.total_usage_percent;
+            }
+            if sample.process_usage_percent > 0.0 || proc_gpu_load == 0.0 {
+                proc_gpu_load = sample.process_usage_percent;
+            }
+            if sample.used_vram_bytes > 0 && (gpu.used_vram_bytes == 0 || gpu.used_vram_bytes < sample.used_vram_bytes) {
+                gpu.used_vram_bytes = sample.used_vram_bytes;
+                if (gpu.total_vram_bytes == 0 || gpu.total_vram_bytes < gpu.used_vram_bytes) && memory.total_memory_bytes > 0 {
+                    gpu.total_vram_bytes = memory.total_memory_bytes;
+                }
+                if gpu.total_vram_bytes > 0 {
+                    gpu.vram_usage_percent = ((gpu.used_vram_bytes as f64 / gpu.total_vram_bytes as f64) * 100.0).clamp(0.0, 100.0);
+                }
+            }
+        }
+
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        {
+            let sample = self.linux_gpu.poll(self.current_pid.as_u32());
+            if sample.total_usage_percent > 0.0 || gpu.usage_percent == 0.0 {
+                gpu.usage_percent = sample.total_usage_percent;
+            }
+            if sample.process_usage_percent > 0.0 || proc_gpu_load == 0.0 {
+                proc_gpu_load = sample.process_usage_percent;
+            }
+            if sample.used_vram_bytes > 0 && (gpu.used_vram_bytes == 0 || gpu.used_vram_bytes < sample.used_vram_bytes) {
+                gpu.used_vram_bytes = sample.used_vram_bytes;
+                if (gpu.total_vram_bytes == 0 || gpu.total_vram_bytes < gpu.used_vram_bytes) && memory.total_memory_bytes > 0 {
+                    gpu.total_vram_bytes = memory.total_memory_bytes;
+                }
+                if gpu.total_vram_bytes > 0 {
+                    gpu.vram_usage_percent = ((gpu.used_vram_bytes as f64 / gpu.total_vram_bytes as f64) * 100.0).clamp(0.0, 100.0);
+                }
+            }
+            if !gpu.available && sample.total_usage_percent > 0.0 {
+                gpu.available = true;
+                gpu.vendor = "Integrated / System GPU".to_string();
+                gpu.model = "DRM / DevFreq GPU".to_string();
+            }
+        }
         let current_process = self.build_process_metrics(
             self.current_pid,
             cpu.logical_cores,
@@ -207,8 +269,30 @@ impl EasyMonitoringEngine {
 
         let logical_cores = self.system.cpus().len().max(1);
         let total_mem = self.system.total_memory();
-        let (gpu, proc_gpu_load, proc_gpu_vram) =
+        let (gpu, mut proc_gpu_load, mut proc_gpu_vram) =
             Self::collect_gpu_and_process_metrics(total_mem, target_pid.as_u32());
+
+        #[cfg(target_os = "windows")]
+        if let Some(ref mut monitor) = self.windows_gpu {
+            let sample = monitor.poll(target_pid.as_u32());
+            if sample.process_usage_percent > 0.0 || proc_gpu_load == 0.0 {
+                proc_gpu_load = sample.process_usage_percent;
+            }
+            if sample.used_vram_bytes > 0 && proc_gpu_vram == 0 {
+                proc_gpu_vram = sample.used_vram_bytes;
+            }
+        }
+
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        {
+            let sample = self.linux_gpu.poll(target_pid.as_u32());
+            if sample.process_usage_percent > 0.0 || proc_gpu_load == 0.0 {
+                proc_gpu_load = sample.process_usage_percent;
+            }
+            if sample.used_vram_bytes > 0 && proc_gpu_vram == 0 {
+                proc_gpu_vram = sample.used_vram_bytes;
+            }
+        }
 
         self.build_process_metrics(
             target_pid,

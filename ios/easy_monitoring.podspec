@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'easy_monitoring'
-  s.version          = '0.1.0'
+  s.version          = '0.1.1'
   s.summary          = 'Real-time CPU, RAM, and GPU hardware monitoring library powered by Rust.'
   s.description      = <<-DESC
 Cross-platform CPU, RAM, and GPU hardware monitoring library for Flutter using Rust sysinfo and gfxinfo.
