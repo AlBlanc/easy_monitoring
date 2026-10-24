@@ -1,3 +1,8 @@
+## 0.1.1-1
+
+* Configure automated publishing to pub.dev via GitHub Actions OIDC.
+* Attach all precompiled native binaries to GitHub release before publishing.
+
 ## 0.1.1
 
 * **Fix Windows GPU Usage**: Resolved an issue where GPU utilization percentage stayed at 0% on Windows with Intel graphics (and other non-NVIDIA GPUs) by implementing continuous WDDM hardware engine aggregation (`\GPU Engine(*)\Utilization Percentage`) in `rust/src/windows_gpu.rs`.

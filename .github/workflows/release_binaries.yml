@@ -133,3 +133,20 @@ jobs:
             artifacts/linux-binary/libeasy_monitoring-linux-x86_64.so
             artifacts/android-binary/libeasy_monitoring-android-jniLibs.tar.gz
             artifacts/windows-binary/easy_monitoring-windows-x86_64.dll
+
+  publish:
+    name: Publish to pub.dev
+    needs: [release]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Dart SDK
+        uses: dart-lang/setup-dart@v1
+
+      - name: Publish to pub.dev
+        run: dart pub publish --force
