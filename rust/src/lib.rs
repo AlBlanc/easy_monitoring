@@ -604,7 +604,16 @@ impl EasyMonitoringEngine {
 /// On iOS, `sysinfo` disables process enumeration due to App Store sandbox rules,
 /// but querying the current process's own Mach task (`mach_task_self`) is 100% allowed.
 #[cfg(target_os = "ios")]
+#[allow(deprecated)]
 fn query_ios_current_task_metrics() -> (f32, u64, u64) {
+    const TH_USAGE_SCALE: f32 = 1000.0;
+    unsafe extern "C" {
+        fn mach_port_deallocate(
+            task: libc::mach_port_t,
+            name: libc::mach_port_t,
+        ) -> libc::kern_return_t;
+    }
+
     unsafe {
         let task = libc::mach_task_self();
         let mut info: libc::mach_task_basic_info_data_t = std::mem::zeroed();
@@ -646,11 +655,10 @@ fn query_ios_current_task_metrics() -> (f32, u64, u64) {
                 ) == libc::KERN_SUCCESS
                 {
                     if (tinfo.flags & libc::TH_FLAGS_IDLE) == 0 {
-                        total_cpu_pct +=
-                            (tinfo.cpu_usage as f32 / libc::TH_USAGE_SCALE as f32) * 100.0;
+                        total_cpu_pct += (tinfo.cpu_usage as f32 / TH_USAGE_SCALE) * 100.0;
                     }
                 }
-                libc::mach_port_deallocate(task, thread);
+                let _ = mach_port_deallocate(task, thread);
             }
             let alloc_size =
                 (thread_count as usize) * std::mem::size_of::<libc::thread_t>();

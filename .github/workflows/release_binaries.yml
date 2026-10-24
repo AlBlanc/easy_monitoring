@@ -31,9 +31,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: macos-binary
-          path: |
-            prebuilt/macos/libeasy_monitoring.dylib
-            libeasy_monitoring-macos-universal.dylib
+          path: libeasy_monitoring-macos-universal.dylib
 
   build-ios:
     name: Build iOS Static Libraries (arm64 + simulator)
@@ -42,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+          targets: aarch64-apple-ios
       - name: Compile iOS static library (.a)
         run: |
           cargo build --manifest-path rust/Cargo.toml --release --target aarch64-apple-ios
@@ -52,9 +50,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ios-binary
-          path: |
-            prebuilt/ios/libeasy_monitoring.a
-            libeasy_monitoring-ios-arm64.a
+          path: libeasy_monitoring-ios-arm64.a
 
   build-linux:
     name: Build Linux Binary (x86_64)
@@ -75,9 +71,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: linux-binary
-          path: |
-            prebuilt/linux/libeasy_monitoring.so
-            libeasy_monitoring-linux-x86_64.so
+          path: libeasy_monitoring-linux-x86_64.so
 
   build-android:
     name: Build Android Binaries (arm64-v8a, armeabi-v7a, x86_64)
@@ -91,14 +85,14 @@ jobs:
         run: cargo install cargo-ndk
       - name: Compile Android JNI libraries (.so)
         run: |
-          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 -o prebuilt/android build --manifest-path rust/Cargo.toml --release
+          mkdir -p prebuilt/android
+          cd rust && cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 -o ../prebuilt/android build --release
+          cd ..
           tar -czf libeasy_monitoring-android-jniLibs.tar.gz -C prebuilt/android .
       - uses: actions/upload-artifact@v4
         with:
           name: android-binary
-          path: |
-            prebuilt/android
-            libeasy_monitoring-android-jniLibs.tar.gz
+          path: libeasy_monitoring-android-jniLibs.tar.gz
 
   build-windows:
     name: Build Windows Binary (x86_64)
@@ -117,9 +111,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows-binary
-          path: |
-            prebuilt/windows/easy_monitoring.dll
-            easy_monitoring-windows-x86_64.dll
+          path: easy_monitoring-windows-x86_64.dll
 
   release:
     name: Attach Binaries to GitHub Release

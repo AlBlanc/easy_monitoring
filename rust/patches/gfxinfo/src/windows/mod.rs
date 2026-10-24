@@ -1,10 +1,9 @@
 use serde::Deserialize;
-use std::{error::Error, ptr::null_mut};
+use std::error::Error;
 use windows::{
   Win32::System::Performance::{
-    PDH_CSTATUS_BAD_COUNTERNAME, PDH_CSTATUS_VALID_DATA, PDH_FMT_DOUBLE, PdhAddCounterW,
-    PdhCloseQuery, PdhCollectQueryData, PdhGetFormattedCounterValue, PdhGetRawCounterValue,
-    PdhOpenQueryW,
+    PDH_FMT_DOUBLE, PDH_HCOUNTER, PDH_HQUERY, PdhAddCounterW, PdhCloseQuery, PdhCollectQueryData,
+    PdhGetFormattedCounterValue, PdhOpenQueryW,
   },
   core::PCWSTR,
 };
@@ -143,7 +142,7 @@ pub fn active_gpu() -> Result<Box<dyn Gpu>, Box<dyn Error>> {
 }
 
 pub unsafe fn counter_value(counter_path: String) -> Result<u64, Box<dyn Error>> {
-  let mut query: isize = 0;
+  let mut query = PDH_HQUERY::default();
   let status = unsafe { PdhOpenQueryW(None, 0, &mut query) };
 
   if status != 0 {
@@ -156,7 +155,7 @@ pub unsafe fn counter_value(counter_path: String) -> Result<u64, Box<dyn Error>>
     .collect();
   let counter_path_pcwstr = PCWSTR(counter_path_utf16.as_ptr());
 
-  let mut counter: isize = 0;
+  let mut counter = PDH_HCOUNTER::default();
 
   let status = unsafe { PdhAddCounterW(query, counter_path_pcwstr, 0, &mut counter) };
 
