@@ -1,0 +1,43 @@
+group = "com.alban.easy_monitoring"
+version = "0.1.0"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.2.1")
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+android {
+    namespace = "com.alban.easy_monitoring"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    sourceSets {
+        main {
+            // Zero-Rust path: automatically bundle precompiled .so libraries
+            // placed in prebuilt/android/{arm64-v8a,armeabi-v7a,x86_64}/libeasy_monitoring.so
+            jniLibs.srcDirs += ["../prebuilt/android"]
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}

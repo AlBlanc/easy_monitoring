@@ -1,0 +1,28 @@
+# Exclude Flutter/Dart/SwiftPM build & tool caches from pub.dev archive
+build/
+.build/
+macos/easy_monitoring/.build/
+ios/easy_monitoring/.build/
+.dart_tool/
+example/build/
+example/.dart_tool/
+example/macos/Pods/
+example/ios/Pods/
+example/macos/Flutter/ephemeral/
+example/ios/Flutter/ephemeral/
+example/linux/flutter/ephemeral/
+example/windows/flutter/ephemeral/
+
+# Exclude heavy intermediate Rust build artifacts from pub.dev archive
+rust/target/
+rust/vendor/
+.cargo/
+
+# Explicitly include prebuilt native binaries (< 2 MB total) so pub.dev users
+# never need Rust installed on their machine!
+!prebuilt/macos/libeasy_monitoring.dylib
+!macos/easy_monitoring/Sources/easy_monitoring/Resources/libeasy_monitoring.dylib
+!prebuilt/linux/libeasy_monitoring.so
+!prebuilt/windows/easy_monitoring.dll
+!prebuilt/ios/libeasy_monitoring.a
+!prebuilt/android/

@@ -1,0 +1,37 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# Rust build artifacts & local vendor cache
+rust/target/
+rust/vendor/
+.cargo/
+
+# Keep prebuilt directory structure
+!prebuilt/
+!prebuilt/macos/
+!prebuilt/linux/
+!prebuilt/windows/
+
+# macOS / iOS / Xcode / SwiftPM generated files
+.build/
+macos/easy_monitoring/.build/
+ios/easy_monitoring/.build/
+macos/Frameworks/
+ios/Frameworks/
+example/.dart_tool/
+example/build/
+example/macos/Pods/
+example/ios/Pods/
+example/macos/Flutter/ephemeral/
+example/ios/Flutter/ephemeral/
+example/linux/flutter/ephemeral/
+example/windows/flutter/ephemeral/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
