@@ -129,13 +129,13 @@ impl LinuxGpuMonitor {
 
     fn sample_process_gpu(&mut self, target_pid: u32, elapsed_secs: f64) -> (f64, u64) {
         if target_pid == 0 {
-            return (0.0, 0.0);
+            return (0.0, 0);
         }
 
         let fdinfo_dir = format!("/proc/{}/fdinfo", target_pid);
         let path = Path::new(&fdinfo_dir);
         if !path.is_dir() {
-            return (0.0, 0.0);
+            return (0.0, 0);
         }
 
         let mut total_drm_ns = 0u64;
