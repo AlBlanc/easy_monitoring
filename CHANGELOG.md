@@ -1,7 +1,8 @@
-## 0.1.1-1
+## 0.1.2
 
-* Configure automated publishing to pub.dev via GitHub Actions OIDC.
-* Attach all precompiled native binaries to GitHub release before publishing.
+* Fix Windows GPU continuous hardware engine sampling on Intel and non-NVIDIA GPUs.
+* Add VRAM fallback to shared memory for integrated graphics (Arc, Iris Xe, UHD, AMD APU, Apple Silicon).
+* Configure automated CI publishing to pub.dev via GitHub Actions OIDC and attach precompiled binaries to releases.
 
 ## 0.1.1
 

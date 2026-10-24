@@ -18,7 +18,7 @@ void main() {
     });
 
     test('returns native Rust library version', () {
-      expect(monitor.nativeVersion, equals('0.1.1-1'));
+      expect(monitor.nativeVersion, equals('0.1.2'));
     });
 
     test(

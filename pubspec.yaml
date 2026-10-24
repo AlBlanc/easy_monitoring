@@ -2,7 +2,7 @@ name: easy_monitoring
 description: >-
   Real-time CPU, RAM, GPU, and current process hardware monitoring library for Flutter
   (Windows, macOS, Linux, Android, iOS) powered by Rust (sysinfo & gfxinfo) and exposed via Dart Streams.
-version: 0.1.1-1
+version: 0.1.2
 homepage: https://github.com/AlBlanc/easy_monitoring
 repository: https://github.com/AlBlanc/easy_monitoring
 
